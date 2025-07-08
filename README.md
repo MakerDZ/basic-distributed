@@ -18,13 +18,25 @@ def process_video(video_path):
 This function does the actual work.
 
 ### 2. Worker Runner (`worker_runner.py`)
-A small Python script that:
+A smart Python script that:
 - Connects to Redis queue
-- Waits for new jobs
+- Spawns multiple worker processes (default: 2)
+- Each worker waits for jobs
 - Runs the process_video function
 - Sends result back to Redis
 
-You run this script to process jobs from the queue.
+You can control the number of workers:
+```bash
+# In your .env file
+NUM_WORKERS=3  # Run 3 parallel workers
+```
+
+Each worker runs independently, so if you have 3 workers:
+- Worker_1 could be processing video1.mp4
+- Worker_2 could be processing video2.mp4
+- Worker_3 could be processing video3.mp4
+
+All at the same time! 🚀
 
 ### 3. API Server (`app/api.py`)
 FastAPI app exposes these endpoints:
@@ -50,41 +62,51 @@ sequenceDiagram
     participant C as Client
     participant A as API Server
     participant R as Redis Queue
-    participant W as Worker Runner
+    participant W1 as Worker 1
+    participant W2 as Worker 2
 
-    C->>A: 1. POST /submit (video_path)
+    C->>A: 1. POST /submit (video1.mp4)
     A->>R: 2. Push job to queue
-    W->>R: 3. Poll for new jobs
-    Note over W: 4. Process video
-    W->>R: 5. Store result
+    C->>A: 1b. POST /submit (video2.mp4)
+    A->>R: 2b. Push second job
+    
+    W1->>R: 3. Poll for jobs
+    W2->>R: 3b. Poll for jobs
+    Note over W1: 4. Process video1
+    Note over W2: 4b. Process video2
+    W1->>R: 5. Store result 1
+    W2->>R: 5b. Store result 2
+    
     C->>A: 6. GET /status/{job_id}
-    A->>R: 7. Check job status
+    A->>R: 7. Check status
     C->>A: 8. GET /result/{job_id}
     A->>R: 9. Fetch result
     A->>C: 10. Return result
 ```
 
-1. Client calls `/submit` with input path → API adds job to Redis queue
-2. Worker Runner listens to Redis → picks job → runs processing
-3. Worker Runner finishes job → saves result in Redis
-4. Client polls `/status/{job_id}` to see progress
-5. Client fetches result from `/result/{job_id}` when done
+1. Client submits multiple jobs → API adds them to Redis queue
+2. Multiple workers pick up different jobs simultaneously
+3. Each worker processes its job independently
+4. Results are saved back to Redis as they complete
+5. Client can check status and get results for any job
 
 ## Quick Summary
 
 - **Worker Job** = your processing function
-- **Worker Runner** = script that runs your job when Redis has it
+- **Worker Runner** = spawns multiple workers to process jobs in parallel
 - **API Server** = client interface for submitting/checking jobs
 - All communicate via **Redis** as the queue broker
 
 ## Features
 
 - ✨ Asynchronous job processing
-- 🚀 Multiple worker support
+- 🚀 Multiple worker support (process jobs in parallel)
 - 📊 Job status tracking
 - 🔄 Multiple queue support (default, heavy, fast)
 - 🛠 Environment-based configuration
 - 🔍 Detailed job status and results
+- 💪 Automatic load balancing between workers
+- 🔒 Graceful shutdown handling
 
 ## Next Steps
 
