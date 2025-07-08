@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Default queues if not specified in env
-default_queues = ['default']  # you can use 'heavy', 'fast', etc. later
+default_queues = ['default']
 
 # Get queues from environment or use defaults
 listen_queues = os.getenv('LISTEN_QUEUES', ','.join(default_queues)).split(',')
@@ -17,7 +17,9 @@ redis_conn = Redis(
     host=os.getenv('REDIS_HOST', 'localhost'),
     port=int(os.getenv('REDIS_PORT', 6379)),
     db=int(os.getenv('REDIS_DB', 0)),
-    password=os.getenv('REDIS_PASSWORD', None) or None
+    password=os.getenv('REDIS_PASSWORD'),
+    ssl=os.getenv('REDIS_SSL', 'false').lower() == 'true',
+    ssl_cert_reqs=None  # Required for Upstash Redis
 )
 
 if __name__ == '__main__':

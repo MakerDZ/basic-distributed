@@ -14,7 +14,9 @@ redis_conn = Redis(
     host=os.getenv('REDIS_HOST', 'localhost'),
     port=int(os.getenv('REDIS_PORT', 6379)),
     db=int(os.getenv('REDIS_DB', 0)),
-    password=os.getenv('REDIS_PASSWORD', None) or None
+    password=os.getenv('REDIS_PASSWORD'),
+    ssl=os.getenv('REDIS_SSL', 'false').lower() == 'true',
+    ssl_cert_reqs=None  # Required for Upstash Redis
 )
 q = Queue(os.getenv('QUEUE_NAME', 'default'), connection=redis_conn)
 

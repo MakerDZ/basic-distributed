@@ -2,22 +2,21 @@
 
 ## Requirements
 - Python 3.8+
-- Redis
+- Upstash Redis account (or any Redis service)
 
 ## Quick Setup
 
-1. **Install Redis**
-```bash
-# macOS
-brew install redis
-brew services start redis
+1. **Set Environment Variables**
+```ini
+# Redis
+REDIS_HOST=your-redis-host
+REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password
+REDIS_SSL=true
 
-# Ubuntu
-sudo apt-get install redis-server
-sudo service redis-server start
-
-# Windows
-Download from https://github.com/microsoftarchive/redis/releases
+# Queues (optional)
+LISTEN_QUEUES=default
+QUEUE_NAME=default
 ```
 
 2. **Python Setup**
@@ -30,20 +29,6 @@ source venv/bin/activate  # On macOS/Linux
 
 # Install dependencies
 pip install -r requirements.txt
-```
-
-3. **Environment Setup**
-Create `.env` file with:
-```ini
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_DB=0
-REDIS_PASSWORD=
-
-# Queues
-LISTEN_QUEUES=default,heavy,fast
-QUEUE_NAME=default
 ```
 
 ## Running
@@ -73,6 +58,6 @@ curl "http://localhost:8000/status/{job_id}"
 
 ## Troubleshooting
 
-- **Redis not connecting**: Make sure Redis is running (`redis-cli ping`)
+- **Redis not connecting**: Check your Redis credentials and SSL settings
 - **Worker not processing**: Check if worker is running
 - **API not starting**: Check if port 8000 is free 

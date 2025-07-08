@@ -46,15 +46,22 @@ def submit_job(video_path: str):
 ## How It All Works Together
 
 ```mermaid
-graph TD
-    Client -->|1. Submit job| API[API Server]
-    API -->|2. Push to queue| Redis[Redis Queue]
-    Worker[Worker Runner] -->|3. Poll for jobs| Redis
-    Worker -->|4. Process| Worker
-    Worker -->|5. Save result| Redis
-    Client -->|6. Check status| API
-    Client -->|7. Get result| API
-    API -->|8. Fetch from Redis| Redis
+sequenceDiagram
+    participant C as Client
+    participant A as API Server
+    participant R as Redis Queue
+    participant W as Worker Runner
+
+    C->>A: 1. POST /submit (video_path)
+    A->>R: 2. Push job to queue
+    W->>R: 3. Poll for new jobs
+    Note over W: 4. Process video
+    W->>R: 5. Store result
+    C->>A: 6. GET /status/{job_id}
+    A->>R: 7. Check job status
+    C->>A: 8. GET /result/{job_id}
+    A->>R: 9. Fetch result
+    A->>C: 10. Return result
 ```
 
 1. Client calls `/submit` with input path → API adds job to Redis queue
